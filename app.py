@@ -14,7 +14,8 @@ if not os.path.exists("data"):
     os.makedirs("data")
 
 # Setup variables
-dfs = [] # Dataframe
+dfs = {} # {path : Dataframe}
+selected_df = None # Selected dataframe
 llm = OpenAI(api_token=OPENAI_API_KEY) # OpenAI model
 pdai.config.set({"llm": llm})
 num_of_rows = 1
@@ -30,17 +31,29 @@ if uploaded_files is not None:
         # Save the file under the data directory
         with open(os.path.join("data", file.name), "wb") as f:
             f.write(file.getbuffer())
-        
+        path = os.path.join("data", file.name)
         # Load the data into dataframe
         if file.name.endswith(".xls"):
-            df = pd.read_excel(os.path.join("data", file.name))
+            dfs.update({file.name : pd.read_excel(path)})
         else:
-            df = pd.read_csv(os.path.join("data", file.name))
+            dfs.update({file.name : pd.read_csv(path)})
+    if len(dfs) > 0 and selected_df is None:
+        selected_df = next(iter(dfs.items()))
 
 # Display the dataframe
-if len(dfs) > 0:
-    num_of_rows = st.number_input("Show how many rows?", min_value=1)
-    first_n_rows = df.head(num_of_rows)
+if selected_df is not None:
+    # Layout for selector & input
+    col1, col2 = st.columns([1, 3]) 
+
+    with col1:
+        num_of_rows = st.number_input("Show how many rows?", min_value=1)
+
+    with col2:
+        options = list(dfs.keys())
+        option = st.selectbox("Data Selected", options)
+        if option:
+            selected_df = (option, dfs[option])
+    first_n_rows = selected_df[1].head(num_of_rows)
     st.dataframe(data=first_n_rows, use_container_width=True)
 
 # Chatbot
@@ -55,19 +68,17 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-# Data selector
-if len(dfs) > 0:
-    selected_data = st.selectbox("Select the data", df)
-
-if prompt := st.chat_input():
+if prompt := st.chat_input("Ask a question about the data"):
+    # Store & Display User Message
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)   
 
-    if len(dfs) == 0:
-        st.chat_message("assistant").write("Please upload a csv to get started.")
+    # Store & Display Assistant Response
+    if selected_df is not None:
+        # sdf = pdai.SmartDataframe(selected_df)
+        # response = sdf.ask(prompt)
+        response = "asdf"
     else:
-        # sdf = pdai.SmartDataframe(df)
-        # response = sdf.chat(prompt)
-        response = "balabala"
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.chat_message("assistant").write(msg)
+        response = "Please upload a csv to get started."
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    # Update the chatbot response
+    st.rerun()
