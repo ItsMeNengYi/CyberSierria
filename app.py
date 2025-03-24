@@ -38,7 +38,7 @@ if uploaded_files is not None:
             df = pd.read_csv(os.path.join("data", file.name))
 
 # Display the dataframe
-if len(df) > 0:
+if len(dfs) > 0:
     num_of_rows = st.number_input("Show how many rows?", min_value=1)
     first_n_rows = df.head(num_of_rows)
     st.dataframe(data=first_n_rows, use_container_width=True)
@@ -46,7 +46,7 @@ if len(df) > 0:
 # Chatbot
 if "messages" not in st.session_state:
     display_message = ""
-    if len(df) == 0:
+    if len(dfs) == 0:
         display_message = "Please upload a csv to get started."
     else:
         display_message = "What would you like to know about this data?"
@@ -56,17 +56,18 @@ for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
 # Data selector
-if len(df) > 0:
+if len(dfs) > 0:
     selected_data = st.selectbox("Select the data", df)
 
 if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)   
 
-    if df is None:
+    if len(dfs) == 0:
         st.chat_message("assistant").write("Please upload a csv to get started.")
     else:
-        sdf = pdai.SmartDataframe(df)
-        response = sdf.chat(prompt)
+        # sdf = pdai.SmartDataframe(df)
+        # response = sdf.chat(prompt)
+        response = "balabala"
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.chat_message("assistant").write(msg)
