@@ -4,7 +4,7 @@ CyberSierra Chatbot is a Streamlit-based chatbot powered by OpenAI and PandasAI,
 
 ## Requirements
 
-- Python 3.11
+- Python 3.8+ <3.12
 
 ## Installation
 
@@ -26,16 +26,17 @@ CyberSierra Chatbot is a Streamlit-based chatbot powered by OpenAI and PandasAI,
 ## Dependencies
 
 The following dependencies are required:
-- `openai`
 - `python-dotenv`
 - `streamlit`
-- `pandasai`
+- `pandasai==3.0.0b16`
 - `pandas`
 - `pandasai-openai`
+- `numpy==1.26.4`
+- `xlrd`
 
 You can install them manually using:
 ```sh
-pip install python-dotenv streamlit pandasai pandas pandasai-openai xlrd
+pip install python-dotenv streamlit pandasai==3.0.0b16 pandas pandasai-openai xlrd numpy==1.26.4
 ```
 
 ## Environment Variables
@@ -56,7 +57,7 @@ streamlit run app.py
 ## Features
 
 - Upload CSV or Excel files.
-- View a preview of the uploaded data.
+- View a preview of the uploaded data and set the number of preview rows.
 - Chat with the AI to analyze and gain insights from the data.
 - Powered by OpenAI for intelligent data analysis.
 

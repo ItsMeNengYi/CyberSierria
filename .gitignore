@@ -2,7 +2,7 @@
 .env
 
 # Ignore virtual environment 
-myenv/
+venv/
 
 # Ignore pandasai output
 *.log
