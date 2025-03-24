@@ -1,0 +1,15 @@
+# Ignore environment variables
+.env
+
+# Ignore virtual environment 
+myenv/
+
+# Ignore pandasai output
+*.log
+exports/
+
+# Ignore database
+data/
+
+# Ignore test files
+testing.py
