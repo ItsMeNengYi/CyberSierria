@@ -12,10 +12,10 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 PANDASAI_API_KEY = os.environ.get("PANDASAI_API_KEY", "")
 
 # Setup variables
-if "dfs" not in st.session_state: # {path : Dataframe}
+if "dfs" not in st.session_state: # {<path> : Dataframe}
     st.session_state["dfs"] = {}
 if "selected_df" not in st.session_state:
-    st.session_state["selected_df"] = None # Selected {path : dataframe}
+    st.session_state["selected_df"] = None # {path : dataframe}
 if "num_of_rows" not in st.session_state:
     st.session_state.num_of_rows = 1
 if "database" not in st.session_state:
@@ -123,19 +123,36 @@ def parse_and_save(response):
         st.session_state.messages.append(res)
 
 # Displaying Message
-for msg in st.session_state.messages:
-    if len(dfs) > 0 and "type" not in msg and msg["content"] == "Please upload a csv to get started.":
-        continue
-    if "type" in msg:
-        if msg["type"] == "dataframe":
-            st.chat_message(msg["role"]).write("Displaying the dataframe")
-            st.chat_message(msg["role"]).write(pd.read_csv(msg["content"]))
-            continue
-        elif msg["type"] == "plot":
-            st.chat_message(msg["role"]).write("Displaying the plot")
-            st.image(msg["content"])
-            continue
-    st.chat_message(msg["role"]).write(msg["content"])
+for i,msg in enumerate(st.session_state.messages):
+    if msg["role"] == "assistant":
+        # message and feedback
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            if len(dfs) > 0 and "type" not in msg and msg["content"] == "Please upload a csv to get started.":
+                continue
+            if "type" in msg:
+                if msg["type"] == "dataframe":
+                    st.chat_message(msg["role"]).write("Displaying the dataframe")
+                    st.chat_message(msg["role"]).write(pd.read_csv(msg["content"]))
+                    continue
+                elif msg["type"] == "plot":
+                    st.chat_message(msg["role"]).write("Displaying the plot")
+                    st.image(msg["content"])
+                    continue
+            st.chat_message(msg["role"]).write(msg["content"])
+        with col2:
+            if "feedback" in msg:
+                if msg["feedback"] == "positive":
+                    st.button("👍", disabled=True, key=f"thumbs_up_{i}")
+                elif msg["feedback"] == "negative":
+                    st.button("👎", disabled=True, key=f"thumbs_down_{i}")
+            else:
+                if st.button("👍", key=f"like_{i}"):
+                    msg["feedback"] = "positive"
+                if st.button("👎", key=f"dislike_{i}"):
+                    msg["feedback"] = "negative"
+    else:
+        st.chat_message(msg["role"]).write(msg["content"])
 
 # Process prompts
 if prompt := st.chat_input("Ask a question about " + (str(selected_df[0]) if  selected_df is not None else "") + " data"):
