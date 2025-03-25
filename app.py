@@ -134,12 +134,13 @@ for i,msg in enumerate(st.session_state.messages):
                 if msg["type"] == "dataframe":
                     st.chat_message(msg["role"]).write("Displaying the dataframe")
                     st.chat_message(msg["role"]).write(pd.read_csv(msg["content"]))
-                    continue
                 elif msg["type"] == "plot":
                     st.chat_message(msg["role"]).write("Displaying the plot")
                     st.image(msg["content"])
-                    continue
-            st.chat_message(msg["role"]).write(msg["content"])
+                else:
+                    st.chat_message(msg["role"]).write(msg["content"])
+            else:
+                st.chat_message(msg["role"]).write(msg["content"])
         with col2:
             if "feedback" in msg:
                 if msg["feedback"] == "positive":
@@ -149,8 +150,10 @@ for i,msg in enumerate(st.session_state.messages):
             else:
                 if st.button("👍", key=f"like_{i}"):
                     msg["feedback"] = "positive"
+                    st.rerun()
                 if st.button("👎", key=f"dislike_{i}"):
                     msg["feedback"] = "negative"
+                    st.rerun()
     else:
         st.chat_message(msg["role"]).write(msg["content"])
 
