@@ -9,7 +9,10 @@ venv/
 exports/
 
 # Ignore database
-data/
+database/
 
 # Ignore test files
 testing.py
+
+# Ignore python cache
+__pycache__/
