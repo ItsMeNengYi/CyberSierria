@@ -7,16 +7,23 @@ from pandasai_openai import OpenAI
 from database import Database
 
 # Load the API KEY 
-load_dotenv() 
+# load_dotenv() 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 PANDASAI_API_KEY = os.environ.get("PANDASAI_API_KEY", "")
 
 # Setup variables
-dfs = {} # {path : Dataframe}
-selected_df = None # Selected {path : dataframe}
-num_of_rows = 1
+if "dfs" not in st.session_state: # {path : Dataframe}
+    st.session_state["dfs"] = {}
+if "selected_df" not in st.session_state:
+    st.session_state["selected_df"] = None # Selected {path : dataframe}
+if "num_of_rows" not in st.session_state:
+    st.session_state.num_of_rows = 1
 if "database" not in st.session_state:
     st.session_state["database"] = Database()
+dfs = st.session_state["dfs"]
+selected_df = st.session_state["selected_df"]
+num_of_rows = st.session_state["num_of_rows"]
+database = st.session_state["database"]
 
 if "messages" not in st.session_state:
     display_message = ""
@@ -27,7 +34,7 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": display_message}]
 
 # Load the data
-dfs, selected_df, st.session_state["messages"] = st.session_state["database"].load()
+dfs, selected_df, st.session_state["messages"] = database.load()
 
 # PandasAI Setup
 if OPENAI_API_KEY != "":
@@ -37,8 +44,28 @@ else:
     pdai.api_key.set(PANDASAI_API_KEY)
 
 # Redirect generated charts to the database folder
-# pdai.config.set({"save_charts_path" : st.session_state["database"].get_exports_path()})
+# pdai.config.set({"save_charts_path" : database.get_exports_path()})
 
+# Sidebar with buttons to view chat history and create new chat
+if (new_chat := st.sidebar.button("New Chat")):
+    # Save the current chat
+    database.save(dfs, selected_df, st.session_state["messages"])
+    database.new_chat()
+
+    # Load the chat
+    dfs, selected_df, st.session_state["messages"] = database.load()
+    st.rerun()
+
+
+for i in range(database.num_of_history_chat - 1, -1, -1):
+    if (load_chat := st.sidebar.button("Load Chat " + str(i), icon="🔥" if database.current_chat_id == i else None)):
+        # Save the current chat
+        database.save(dfs, selected_df, st.session_state["messages"])
+
+        # Load the chat
+        database.switch_chat(i)
+        dfs, selected_df, st.session_state["messages"] = database.load()
+        st.rerun()
 
 # Titles
 st.title("CyberSierra Chatbot")
@@ -49,7 +76,7 @@ uploaded_files = st.file_uploader(type=["csv", "xls"], accept_multiple_files=Tru
 if uploaded_files is not None:
     for file in uploaded_files:
         # Save the file in data folder
-        files_folder_path = st.session_state["database"].get_saved_file_path()
+        files_folder_path = database.get_saved_file_path()
         with open(os.path.join(files_folder_path, file.name), "wb") as f:
             f.write(file.getbuffer())
         path = os.path.join(files_folder_path, file.name)
@@ -86,7 +113,7 @@ def parse_and_save(response):
     for index,t in enumerate(response.type):
         if t == 'dataframe':
             df = response.value[index]
-            path = st.session_state["database"].save_dataframe(df)
+            path = database.save_dataframe(df)
             res = {"role": "assistant", "type": "dataframe", "content": path}
         elif t == "chart" or t == "plot":
             path = response.value[index]
@@ -118,7 +145,7 @@ if prompt := st.chat_input("Ask a question about " + (str(selected_df[0]) if  se
 
     # Store & Display Assistant Response
     if selected_df is not None:
-        sdf = pdai.SmartDataframe(selected_df[1])
+        sdf = pdai.SmartDataframe(list(selected_df)[1])
         response = parse_and_save(sdf.chat(prompt))
     else:
         st.session_state.messages.append({"role": "assistant", "content": "Please upload a csv to get started."})
@@ -128,6 +155,4 @@ if prompt := st.chat_input("Ask a question about " + (str(selected_df[0]) if  se
 
 # Save the data
 if len(dfs) > 0:
-    st.session_state["database"].save(dfs_paths=list(dfs.keys()),
-                                    selected_df_path = selected_df[0] if selected_df is not None else None, 
-                                    messages=st.session_state["messages"])
+    database.save(dfs,selected_df,st.session_state["messages"])
