@@ -63,12 +63,14 @@ streamlit run app.py
 
 - Upload CSV or Excel files.
 - View a preview of the uploaded data and set the number of preview rows.
+- View and continue history chat.
+- React to each AI's response
 - Chat with the AI to analyze and gain insights from the data (e.g. graph, chart, datagram...).
 - Powered by OpenAI for intelligent data analysis.
 
 ## Examples
-
 This are examples of how the chatbot processes a Titanic dataset and generates visualizations based on user queries.
+![alt text](README_pic/example/example0.png)
 In this example, the user uploaded titanic.csv, queried the chatbot, and received a plotted distribution of passenger ages.
 ![alt text](README_pic/example/example1.png)
 
