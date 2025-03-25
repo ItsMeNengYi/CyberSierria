@@ -7,7 +7,7 @@ from pandasai_openai import OpenAI
 from database import Database
 
 # Load the API KEY 
-# load_dotenv() 
+load_dotenv() 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 PANDASAI_API_KEY = os.environ.get("PANDASAI_API_KEY", "")
 
