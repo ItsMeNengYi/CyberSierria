@@ -34,12 +34,10 @@ The following dependencies are required:
 - `numpy==1.26.4`
 - `xlrd`
 - `pandasql`
-- `os`
-- `json`
 
 You can install them manually using:
 ```sh
-pip install python-dotenv streamlit pandasai==3.0.0b16 pandas pandasai-openai xlrd numpy==1.26.4 pandasql os json
+pip install python-dotenv streamlit pandasai==3.0.0b16 pandas pandasai-openai xlrd numpy==1.26.4 pandasql
 ```
 
 ## Environment Variables
