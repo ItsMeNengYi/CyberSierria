@@ -9,14 +9,27 @@ class Database():
         self.all_datas = []
         self.database_path = "database/"
         self.base_path = self.database_path
-        self.num_of_history_chat = 0
         self.current_chat_id = 0
     
     def logout(self):
         self.base_path = self.database_path
-        self.num_of_history_chat = 0
         self.current_chat_id = 0
         self.all_datas = []
+
+    def move_to_user_database(self, path):
+        dir_name = os.path.dirname(path)
+        self.decrypt_user_data()
+
+        # If the file is not exist
+        if not os.path.exists(path):
+            return None
+        if not os.path.exists(self.base_path + dir_name):
+            os.makedirs(self.base_path + dir_name)
+        # Move the file to the user database
+        os.rename(path, self.base_path + path)
+
+        self.encrypt_user_data()
+        return self.base_path + path
 
     def encrypt_user_data(self):
         auth.zip_and_encrypt_folder(auth.password, "".join(self.base_path[:-1]))
@@ -54,7 +67,6 @@ class Database():
             # load all the data
             self.load_all_files()
             self.current_chat_id = max(0, len(self.all_datas) - 1)
-            self.new_chat()
             return True
         return False
 
@@ -63,12 +75,11 @@ class Database():
 
     def load_all_files(self):
         for chat_folder in os.listdir(self.base_path):
-            if chat_folder == ".env":
+            if "chat" not in chat_folder:
                 continue
             data = open(self.base_path + chat_folder + "/data.json", "r").read()
             if data != "":
                 self.all_datas.append(json.loads(data))
-                self.num_of_history_chat += 1
 
     def get_saved_file_path(self):
         return self.base_path + "chat_" + str(self.current_chat_id) + "/files/"
@@ -78,6 +89,9 @@ class Database():
     
     def get_data_json_path(self):
         return self.base_path + "chat_" + str(self.current_chat_id) + "/data.json"
+    
+    def get_num_of_history_chat(self):
+        return len(self.all_datas)
     
     def save_dataframe(self, df):
         # Save the dataframe under the chat folder
@@ -138,7 +152,6 @@ class Database():
             self.current_chat_id = len(self.all_datas) - 1
             return
         # Update variables
-        self.num_of_history_chat += 1
         new_id = len(self.all_datas)
         self.all_datas.append({
             "id":new_id,

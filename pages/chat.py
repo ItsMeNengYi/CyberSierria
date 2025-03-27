@@ -80,7 +80,7 @@ def main():
         st.rerun()
 
 
-    for i in range(database.num_of_history_chat - 1, -1, -1):
+    for i in range(database.get_num_of_history_chat() - 1, -1, -1):
         if (load_chat := st.sidebar.button("Load Chat " + str(i), icon="🔥" if database.current_chat_id == i else None)):
             # Save the current chat
             database.save(dfs, selected_df, st.session_state["messages"])
@@ -140,11 +140,16 @@ def main():
                 path = database.save_dataframe(df)
                 res = {"role": "assistant", "type": "dataframe", "content": path}
             elif t == "chart" or t == "plot":
-                path = response.value[index]
+                # Redirect the plot to the database folder
+                path = database.move_to_user_database(response.value[index])
                 res = {"role": "assistant", "type": "plot", "content": path}
             else:
                 res =  {"role": "assistant", "content": str(response.value[index])}
             st.session_state.messages.append(res)
+        
+        # Delete pandasai log
+        if os.path.exists("pandasai.log"):
+            os.remove("pandasai.log")
 
     # Displaying Message
     for i,msg in enumerate(st.session_state.messages):
@@ -190,7 +195,7 @@ def main():
         # Store & Display Assistant Response
         if selected_df is not None:
             sdf = pdai.SmartDataframe(list(selected_df)[1])
-            response = parse_and_save(sdf.chat(prompt))
+            parse_and_save(sdf.chat(prompt))
         else:
             st.session_state.messages.append({"role": "assistant", "content": "Please upload a csv to get started."})
 
