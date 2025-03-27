@@ -1,24 +1,74 @@
 import os
 import json
 import pandas as pd
+from auth import auth
 
 # Database that store chat history graph and dataframes
 class Database():
     def __init__(self):
         self.all_datas = []
-        self.base_path = "database/"
+        self.database_path = "database/"
+        self.base_path = self.database_path
         self.num_of_history_chat = 0
+        self.current_chat_id = 0
+    
+    def logout(self):
+        self.base_path = self.database_path
+        self.num_of_history_chat = 0
+        self.current_chat_id = 0
+        self.all_datas = []
+
+    def encrypt_user_data(self):
+        auth.zip_and_encrypt_folder(auth.password, "".join(self.base_path[:-1]))
+
+    def decrypt_user_data(self):
+        auth.decrypt_and_unzip_folder(auth.password, self.base_path[:-1] + ".zip")
+
+    def get_env_path(self, username):
+        self.decrypt_user_data()
+        if username is None:
+            return None
+        if os.path.exists("database/" + username + "/.env"):
+            return "database/" + username + "/.env"
+        return None
+
+    def create_new_user(self, username, password, openai_api_key, pandasai_api_key):
+        self.base_path = self.database_path + username + "/"
         if not os.path.exists(self.base_path):
             os.makedirs(self.base_path)
+            # Save the .env file
+            with open(self.base_path + ".env", "w") as file:
+                if openai_api_key:
+                    file.write(f"OPENAI_API_KEY={openai_api_key}\n")
+                if pandasai_api_key:
+                    file.write(f"PANDASAI_API_KEY={pandasai_api_key}\n")
+            # Create data.json
+            self.new_chat()
+            auth.zip_and_encrypt_folder(password, "".join(self.base_path[:-1]))
 
-        # load all the data
+    def login(self, username, password):
+        # Check if already decrypt folder
+        already_decrypt_folder = os.path.exists(self.database_path + username)
+        if  already_decrypt_folder or auth.decrypt_and_unzip_folder(password, self.database_path + username + ".zip"):
+            self.base_path = self.database_path + username + "/"
+            # load all the data
+            self.load_all_files()
+            self.current_chat_id = max(0, len(self.all_datas) - 1)
+            self.new_chat()
+            return True
+        return False
+
+    def get_user_env_path(self):
+        return self.base_path + ".env"
+
+    def load_all_files(self):
         for chat_folder in os.listdir(self.base_path):
+            if chat_folder == ".env":
+                continue
             data = open(self.base_path + chat_folder + "/data.json", "r").read()
             if data != "":
                 self.all_datas.append(json.loads(data))
                 self.num_of_history_chat += 1
-        self.current_chat_id = max(0, len(self.all_datas) - 1)
-        self.new_chat()
 
     def get_saved_file_path(self):
         return self.base_path + "chat_" + str(self.current_chat_id) + "/files/"
@@ -36,6 +86,7 @@ class Database():
         return df_path
     
     def save(self, dfs, selected_df, messages):
+        self.decrypt_user_data()
         dfs_paths=list(dfs.keys())
         if selected_df is not None:
             selected_df_path = next(iter(selected_df)) 
@@ -51,7 +102,10 @@ class Database():
                 break
         json.dump(self.all_datas[index], open(self.get_data_json_path(), "w"))
 
+        self.encrypt_user_data()
+
     def load(self):
+        self.decrypt_user_data()
         for data in self.all_datas:
             if data["id"] != self.current_chat_id:
                 continue
@@ -72,8 +126,8 @@ class Database():
                     selected_df = {selected_df_path : pd.read_excel(full_path)}
                 else:
                     selected_df = {selected_df_path : pd.read_csv(full_path)}
-
             return dfs, selected_df, messages
+        self.encrypt_user_data()
         return None, None, None
     
     def switch_chat(self, chat_id):
@@ -103,3 +157,5 @@ class Database():
     
     def get_current_chat_id(self):
         return self.current_chat_id
+
+database = Database()

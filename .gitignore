@@ -16,3 +16,7 @@ testing.py
 
 # Ignore python cache
 __pycache__/
+pages/__pycache__/
+
+# Ignore user password file
+users.pkl
