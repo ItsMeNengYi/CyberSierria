@@ -7,3 +7,5 @@ numpy==1.26.4
 xlrd
 pandasql
 pycryptodomex
+cryptography
+zxcvbn
