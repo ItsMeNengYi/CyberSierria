@@ -85,7 +85,7 @@ In this example, the user uploaded titanic.csv, queried the chatbot, and receive
 ![alt text](README_pic/example/example2.png)
 
 **Ensure you logout before closing the app**
-![alt text](logoutbutton.png)
+![alt text](README_pic/example/logoutbutton.png)
 
 ## Folder Structure
 
