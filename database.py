@@ -147,10 +147,18 @@ class Database():
     def switch_chat(self, chat_id):
         self.current_chat_id = chat_id
 
+    def get_chat(self, id):
+        if id >= len(self.all_datas):
+            return None
+        for data in self.all_datas:
+            if data["id"] == id:
+                return data
+        return None
+
     def new_chat(self):
-        if len(self.all_datas) != 0 and len(self.all_datas[-1]["messages"]) == 1:
-            self.current_chat_id = len(self.all_datas) - 1
-            return
+        for data in self.all_datas:
+            if len(data["messages"]) == 1:
+                return
         # Update variables
         new_id = len(self.all_datas)
         self.all_datas.append({

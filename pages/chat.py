@@ -80,15 +80,20 @@ def main():
         st.rerun()
 
 
-    for i in range(database.get_num_of_history_chat() - 1, -1, -1):
-        if (load_chat := st.sidebar.button("Load Chat " + str(i), icon="🔥" if database.current_chat_id == i else None)):
-            # Save the current chat
-            database.save(dfs, selected_df, st.session_state["messages"])
+    i = 0
+    while True:
+        if database.get_chat(i) is not None:
+            if (load_chat := st.sidebar.button("Load Chat " + str(i), icon="🔥" if database.current_chat_id == i else None)):
+                # Save the current chat
+                database.save(dfs, selected_df, st.session_state["messages"])
 
-            # Load the chat
-            database.switch_chat(i)
-            dfs, selected_df, st.session_state["messages"] = database.load()
-            st.rerun()
+                # Load the chat
+                database.switch_chat(i)
+                dfs, selected_df, st.session_state["messages"] = database.load()
+                st.rerun()
+            i += 1
+        else:
+            break
 
     # Titles
     st.title("CyberSierra Chatbot")
