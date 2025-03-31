@@ -7,10 +7,12 @@ from pandasai_openai import OpenAI
 from database import database
 from auth import auth
 
+
 def main():
     # Load the API KEY 
     global database
-    if (env_path := database.get_env_path(auth.username)) is not None:
+    database.decrypt_user_data()
+    if (env_path := database.get_env_path(auth.username)):
         load_dotenv(env_path) 
         OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
         PANDASAI_API_KEY = os.environ.get("PANDASAI_API_KEY", "")
@@ -20,6 +22,8 @@ def main():
     if OPENAI_API_KEY == "" and PANDASAI_API_KEY == "":
         st.error("API Key not found. Please make sure you have logged in and upload the .env file.")
         return
+    
+    database.encrypt_user_data()
     
     # Setup variables
     if "dfs" not in st.session_state: # {<path> : Dataframe}
@@ -104,6 +108,7 @@ def main():
     uploaded_files = st.file_uploader(type=["csv", "xls"], accept_multiple_files=True, label="Upload csv or xls files")
     if uploaded_files is not None:
         for file in uploaded_files:
+            database.decrypt_user_data()
             # Save the file in data folder
             files_folder_path = database.get_saved_file_path()
             with open(os.path.join(files_folder_path, file.name), "wb") as f:
